@@ -1,0 +1,25 @@
+{
+  "tileSize": {
+    "width": 96,
+    "height": 96
+  },
+  "tiles": {
+    "northwest": [0, 0],
+    "north": [1, 0],
+    "northeast": [2, 0],
+    "west": [0, 1],
+    "middle": [1, 1],
+    "east": [2, 1],
+    "southwest": [0, 2],
+    "south": [1, 2],
+    "southeast": [2, 2]
+  },
+  "map": [
+    ["northwest", "north", "north", "north", "north", "northeast"],
+    ["west", "middle", "middle", "middle", "middle", "east"],
+    ["west", "middle", "middle", "middle", "middle", "east"],
+    ["west", "middle", "middle", "middle", "middle", "east"],
+    ["west", "middle", "middle", "middle", "middle", "east"],
+    ["southwest", "south", "south", "south", "south", "southeast"]
+  ]
+}
