@@ -17,3 +17,5 @@ Como se indicó antes, Javier y Andreína deben llegar al mismo momento a la ent
 ## Instrucciones
 
 Ejecute `pip3 install -r requirements.txt` para instalar las dependencias. Luego, ejecute `python3 main.py` para correr el programa.
+
+<img width="100%" alt="image" src="https://github.com/user-attachments/assets/c7052749-35d6-4559-a439-753d9d74fc0c">
