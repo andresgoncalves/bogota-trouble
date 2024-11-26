@@ -1,9 +1,10 @@
 import json
 import tkinter as tk
 from tkinter import messagebox
-from PIL import Image, ImageTk
+from PIL import ImageTk
 from typing import Any
 
+from tile_map import TileMap
 from dijkstra import dijkstra, get_dijkstra_route, get_dijkstra_distance, M
 
 
@@ -41,40 +42,6 @@ def build_matrix():
         if y < 5:
             matrix[node][corner_to_node(x, y + 1)] = y_distance
     return matrix
-
-
-class TileMap:
-    def __init__(
-        self,
-        image_path: str,
-        tile_width: int,
-        tile_height: int,
-        tile_data: dict[Any, tuple[int, int]]
-    ):
-        image = Image.open(image_path)
-
-        self.tile_width: int = tile_width
-        self.tile_height: int = tile_height
-
-        self.tiles: dict[Any, ImageTk.PhotoImage] = dict()
-
-        for name, (x, y) in tile_data.items():
-            tk_tile = ImageTk.PhotoImage(self._load_tile(image, x, y))
-            self.tiles[name] = tk_tile
-
-        image.close()
-
-    def get_tile(self, name: Any):
-        return self.tiles.get(name)
-
-    def _load_tile(self, image: Image.Image, x: int, y: int):
-        tile = image.crop((
-            x * self.tile_width,
-            y * self.tile_height,
-            (x + 1) * self.tile_width,
-            (y + 1) * self.tile_height
-        ))
-        return tile
 
 
 def draw_map(canvas: tk.Canvas,
@@ -137,7 +104,6 @@ def draw_path(
     fill: str = "white"
 ):
     if len(route) > 1:
-
         canvas.create_line(
             *[
                 (
@@ -163,31 +129,45 @@ def draw_path(
         )
 
 
-def main():
-    data_path = "./assets/map.json"
-    image_path = "./assets/map.png"
+def draw_sprite(
+    canvas: tk.Canvas,
+    image: ImageTk.PhotoImage,
+    position: tuple[int, int],
+    tile_width: int,
+    tile_height: int,
+    vertical_offset: int,
+    horizontal_offset: int,
+    fill: str = "white"
+):
+    canvas.create_image(
+        horizontal_offset + (5 - position[0]) * tile_width,
+        vertical_offset + (5 - position[1]) * tile_height,
+        image=image,
+        anchor="nw")
 
-    with open(data_path) as file:
-        data = json.load(file)
 
-    tile_width: int = data["tileSize"]["width"]
-    tile_height: int = data["tileSize"]["height"]
-    vertical_offset = 32
-    horizontal_offset = 32
+def simular(matrix: list[list[int]],
+            destination: int,
+            javiers_house: int,
+            andreinas_house: int,
+            root: tk.Tk,
+            tile_width: int,
+            tile_height: int,
+            vertical_offset: int,
+            horizontal_offset: int,
+            map_data: list[list[Any]],
+            tile_map: TileMap,
+            sprite_map: TileMap
+            ):
+    javiers_table = dijkstra(javiers_house, matrix, handicap=0)
+    javiers_route = [node_to_corner(node)
+                     for node in get_dijkstra_route(javiers_table, destination)]
+    javiers_time = get_dijkstra_distance(javiers_table, destination)
 
-    tile_data: dict[Any, tuple[int, int]] = data["tiles"]
-    map_data: list[list[Any]] = data["map"]
-
-    # Create the main window
-    root = tk.Tk()
-    root.title("Bogota Trouble")
-
-    tile_map = TileMap(
-        image_path=image_path,
-        tile_width=tile_width,
-        tile_height=tile_height,
-        tile_data=tile_data
-    )
+    andreinas_table = dijkstra(andreinas_house, matrix, handicap=2)
+    andreinas_route = [node_to_corner(node)
+                       for node in get_dijkstra_route(andreinas_table, destination)]
+    andreinas_time = get_dijkstra_distance(andreinas_table, destination)
 
     canvas = tk.Canvas(
         root,
@@ -216,24 +196,9 @@ def main():
     )
     canvas.pack()
 
-    javiers_house = full_corner_to_node(14, 54)
-    andreinas_house = full_corner_to_node(13, 52)
-
-    the_darkness_club = full_corner_to_node(14, 50)
-    la_pasion_bar = full_corner_to_node(11, 54)
-    rolita_beerhouse = full_corner_to_node(12, 50)
-
-    destination = la_pasion_bar
-
-    matrix = build_matrix()
-
-    table = dijkstra(javiers_house, matrix, handicap=0)
-    route = [node_to_corner(node)
-             for node in get_dijkstra_route(table, destination)]
-    javiers_time = get_dijkstra_distance(table, destination)
     draw_path(
         canvas=canvas,
-        route=route,
+        route=javiers_route,
         tile_width=tile_width,
         tile_height=tile_height,
         horizontal_offset=horizontal_offset - 4,
@@ -241,13 +206,9 @@ def main():
         fill="skyblue"
     )
 
-    table = dijkstra(andreinas_house, matrix, handicap=2)
-    route = [node_to_corner(node)
-             for node in get_dijkstra_route(table, destination)]
-    andreinas_time = get_dijkstra_distance(table, destination)
     draw_path(
         canvas=canvas,
-        route=route,
+        route=andreinas_route,
         tile_width=tile_width,
         tile_height=tile_height,
         horizontal_offset=horizontal_offset + 8,
@@ -255,11 +216,211 @@ def main():
         fill="pink"
     )
 
+    draw_sprite(canvas=canvas,
+                image=sprite_map.get_tile("male_south1"),
+                position=node_to_corner(javiers_house),
+                tile_width=tile_width,
+                tile_height=tile_height,
+                horizontal_offset=horizontal_offset,
+                vertical_offset=vertical_offset,)
+
+    draw_sprite(canvas=canvas,
+                image=sprite_map.get_tile("female_south1"),
+                position=node_to_corner(andreinas_house),
+                tile_width=tile_width,
+                tile_height=tile_height,
+                horizontal_offset=horizontal_offset,
+                vertical_offset=vertical_offset,)
+
     messagebox.showinfo("Resultado", f"Javier debe salir de su casa {andreinas_time - javiers_time} minutos después que Andreina"
                         if javiers_time < andreinas_time else
                         f"Andreina debe salir de su casa {
                             javiers_time - andreinas_time} minutos después que Javier"
                         )
+
+
+def main():
+
+    # Calculate routes
+
+    javiers_house = full_corner_to_node(14, 54)
+    andreinas_house = full_corner_to_node(13, 52)
+
+    the_darkness_club = full_corner_to_node(14, 50)
+    la_pasion_bar = full_corner_to_node(11, 54)
+    rolita_beerhouse = full_corner_to_node(12, 50)
+
+    matrix = build_matrix()
+
+    # Create the main window
+    root = tk.Tk()
+    root.title("Bogota Trouble")
+
+    # Create a frame to hold the buttons
+    title_frame = tk.Frame(root)
+    title_frame.pack(pady=10)
+
+    title_text = tk.Label(title_frame, text="Seleccione un local de destino:")
+    title_text.pack()
+
+    button_frame = tk.Frame(title_frame)
+    button1 = tk.Button(button_frame, text="Discoteca The Darkness",
+                        command=lambda: simulate(the_darkness_club))
+    button1.pack(side=tk.LEFT, padx=5)
+    button2 = tk.Button(button_frame, text="Bar La Pasión",
+                        command=lambda: simulate(la_pasion_bar))
+    button2.pack(side=tk.LEFT, padx=5)
+    button3 = tk.Button(button_frame, text="Cervecería Rolita",
+                        command=lambda: simulate(rolita_beerhouse))
+    button3.pack(side=tk.LEFT, padx=5)
+    button_frame.pack(anchor=tk.CENTER)
+
+    # Load resources
+
+    map_data_path = "./assets/map.json"
+    map_image_path = "./assets/map.png"
+    sprite_data_path = "./assets/sprite.json"
+    sprite_image_path = "./assets/sprite.png"
+
+    with open(map_data_path) as file:
+        data = json.load(file)
+
+    tile_width: int = data["tileSize"]["width"]
+    tile_height: int = data["tileSize"]["height"]
+    vertical_offset = 32
+    horizontal_offset = 32
+
+    tile_data: dict[Any, tuple[int, int]] = data["tiles"]
+    map_data: list[list[Any]] = data["map"]
+
+    tile_map = TileMap(
+        image_path=map_image_path,
+        tile_width=tile_width,
+        tile_height=tile_height,
+        tile_data=tile_data
+    )
+
+    with open(sprite_data_path) as file:
+        data = json.load(file)
+
+    sprite_width: int = data["spriteSize"]["width"]
+    sprite_height: int = data["spriteSize"]["height"]
+    sprite_data: dict[Any, tuple[int, int]] = data["sprites"]
+
+    sprite_map = TileMap(
+        image_path=sprite_image_path,
+        tile_width=sprite_width,
+        tile_height=sprite_height,
+        tile_data=sprite_data
+    )
+
+    canvas = tk.Canvas(
+        root,
+        width=horizontal_offset + tile_width * len(map_data[0]),
+        height=vertical_offset + tile_height * len(map_data)
+    )
+
+    draw_map(
+        canvas=canvas,
+        tile_width=tile_width,
+        tile_height=tile_height,
+        horizontal_offset=horizontal_offset,
+        vertical_offset=vertical_offset,
+        map_data=map_data,
+        tile_map=tile_map
+    )
+    draw_axes(
+        canvas=canvas,
+        tile_width=tile_width,
+        tile_height=tile_height,
+        x_axis_start=15,
+        x_axis_end=10,
+        y_axis_start=55,
+        y_axis_end=50,
+        horizontal_offset=horizontal_offset,
+        vertical_offset=vertical_offset,
+    )
+
+    canvas.pack()
+
+    def simulate(destination: int):
+        javiers_table = dijkstra(javiers_house, matrix, handicap=0)
+        javiers_route = [node_to_corner(node)
+                         for node in get_dijkstra_route(javiers_table, destination)]
+        javiers_time = get_dijkstra_distance(javiers_table, destination)
+
+        andreinas_table = dijkstra(andreinas_house, matrix, handicap=2)
+        andreinas_route = [node_to_corner(node)
+                           for node in get_dijkstra_route(andreinas_table, destination)]
+        andreinas_time = get_dijkstra_distance(andreinas_table, destination)
+
+        canvas.delete("all")
+
+        draw_map(
+            canvas=canvas,
+            tile_width=tile_width,
+            tile_height=tile_height,
+            horizontal_offset=horizontal_offset,
+            vertical_offset=vertical_offset,
+            map_data=map_data,
+            tile_map=tile_map
+        )
+        draw_axes(
+            canvas=canvas,
+            tile_width=tile_width,
+            tile_height=tile_height,
+            x_axis_start=15,
+            x_axis_end=10,
+            y_axis_start=55,
+            y_axis_end=50,
+            horizontal_offset=horizontal_offset,
+            vertical_offset=vertical_offset,
+        )
+
+        draw_path(
+            canvas=canvas,
+            route=javiers_route,
+            tile_width=tile_width,
+            tile_height=tile_height,
+            horizontal_offset=horizontal_offset - 4,
+            vertical_offset=vertical_offset - 4,
+            fill="skyblue"
+        )
+
+        draw_path(
+            canvas=canvas,
+            route=andreinas_route,
+            tile_width=tile_width,
+            tile_height=tile_height,
+            horizontal_offset=horizontal_offset + 8,
+            vertical_offset=vertical_offset + 8,
+            fill="pink"
+        )
+
+        draw_sprite(canvas=canvas,
+                    image=sprite_map.get_tile("male_south1"),
+                    position=node_to_corner(javiers_house),
+                    tile_width=tile_width,
+                    tile_height=tile_height,
+                    horizontal_offset=horizontal_offset,
+                    vertical_offset=vertical_offset,)
+
+        draw_sprite(canvas=canvas,
+                    image=sprite_map.get_tile("female_south1"),
+                    position=node_to_corner(andreinas_house),
+                    tile_width=tile_width,
+                    tile_height=tile_height,
+                    horizontal_offset=horizontal_offset,
+                    vertical_offset=vertical_offset,)
+
+        canvas.update()
+
+        messagebox.showinfo("Resultado", (f"Javier debe salir de su casa {andreinas_time - javiers_time} minutos después que Andreina."
+                            if javiers_time < andreinas_time else
+                            f"Andreina debe salir de su casa \
+                                {javiers_time - andreinas_time} minutos después que Javier")
+                            + f"\nJavier demora {javiers_time} minutos y Andreina demora {andreinas_time} minutos."
+                            )
 
     root.attributes("-topmost", True)
     root.lift()

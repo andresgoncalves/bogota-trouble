@@ -12,14 +12,54 @@
     "east": [2, 1],
     "southwest": [0, 2],
     "south": [1, 2],
-    "southeast": [2, 2]
+    "southeast": [2, 2],
+    "damaged_west": [0, 3],
+    "damaged_middle": [1, 3],
+    "damaged_east": [2, 3],
+    "semaphore_middle": [0, 4],
+    "semaphore_south": [1, 4]
   },
   "map": [
     ["northwest", "north", "north", "north", "north", "northeast"],
-    ["west", "middle", "middle", "middle", "middle", "east"],
-    ["west", "middle", "middle", "middle", "middle", "east"],
-    ["west", "middle", "middle", "middle", "middle", "east"],
-    ["west", "middle", "middle", "middle", "middle", "east"],
-    ["southwest", "south", "south", "south", "south", "southeast"]
+    [
+      "west",
+      "semaphore_middle",
+      "semaphore_middle",
+      "semaphore_middle",
+      "middle",
+      "east"
+    ],
+    [
+      "west",
+      "semaphore_middle",
+      "semaphore_middle",
+      "semaphore_middle",
+      "middle",
+      "east"
+    ],
+    [
+      "west",
+      "semaphore_middle",
+      "semaphore_middle",
+      "semaphore_middle",
+      "middle",
+      "east"
+    ],
+    [
+      "damaged_west",
+      "damaged_middle",
+      "damaged_middle",
+      "damaged_middle",
+      "damaged_middle",
+      "damaged_east"
+    ],
+    [
+      "southwest",
+      "semaphore_south",
+      "semaphore_south",
+      "semaphore_south",
+      "south",
+      "southeast"
+    ]
   ]
 }

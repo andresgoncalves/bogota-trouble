@@ -1,0 +1,24 @@
+{
+  "spriteSize": {
+    "width": 96,
+    "height": 96
+  },
+  "sprites": {
+    "female_south1": [0, 0],
+    "female_south2": [1, 0],
+    "female_east1": [3, 0],
+    "female_east2": [4, 0],
+    "female_west1": [5, 0],
+    "female_west2": [6, 0],
+    "female_north1": [7, 0],
+    "female_north2": [8, 0],
+    "male_south1": [0, 1],
+    "male_south2": [1, 1],
+    "male_east1": [3, 1],
+    "male_east2": [4, 1],
+    "male_west1": [5, 1],
+    "male_west2": [6, 1],
+    "male_north1": [7, 1],
+    "male_north2": [8, 1]
+  }
+}
